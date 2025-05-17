@@ -4,7 +4,18 @@ export interface User {
     id: number;
     name: string;
     email: string;
-    email_verified_at?: string;
+    email_verified_at: string;
+    tenant_id: number | null;
+    roles?: Array<{
+        id: number,
+        name: string,
+        guard_name: string,
+        pivot?: {
+            model_id: number,
+            role_id: number,
+            model_type: string
+        }
+    }>;
 }
 
 export type PageProps<

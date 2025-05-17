@@ -9,6 +9,10 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
+/**
+ * @method bool hasRole(string|array $roles, string $guard = null)
+ * @method bool hasPermissionTo(string|array|\Spatie\Permission\Contracts\Permission $permissions, string $guard = null)
+ */
 class User extends Authenticatable {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasRoles;

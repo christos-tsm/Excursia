@@ -1,3 +1,32 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+* {
+    @apply !outline-none;
+}
+
+body {
+    @apply text-typo-400 font-medium;
+}
+
+[type='checkbox']:focus,
+[type='radio']:focus,
+[type='text']:focus,
+input:where(:not([type])):focus,
+[type='email']:focus,
+[type='url']:focus,
+[type='password']:focus,
+[type='number']:focus,
+[type='date']:focus,
+[type='datetime-local']:focus,
+[type='month']:focus,
+[type='search']:focus,
+[type='tel']:focus,
+[type='time']:focus,
+[type='week']:focus,
+[multiple]:focus,
+textarea:focus,
+select:focus {
+    @apply !ring-0 !outline-none !outline-0;
+}

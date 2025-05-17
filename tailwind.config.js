@@ -13,8 +13,19 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['Manrope', ...defaultTheme.fontFamily.sans],
             },
+            colors: {
+                primary: {
+                    300: '#43ABFF',
+                    400: '#3892DA',
+                    500: '#2E74B1',
+                },
+                typo: {
+                    300: '#0F293D',
+                    400: '#091926',
+                }
+            }
         },
     },
 
