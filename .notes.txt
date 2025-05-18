@@ -1,0 +1,2 @@
+** Migration gia tenants
+php artisan tenants:migrate-active --path=database/migrations/tenant

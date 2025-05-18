@@ -24,7 +24,7 @@ class CreateSuperAdmin extends Command {
     protected $description = 'Δημιουργεί έναν νέο super-admin χρήστη που μπορεί να διαχειρίζεται τουριστικά γραφεία';
 
     /**
-     * Execute the console command.
+     * Execute the console command. ct6982384256
      */
     public function handle() {
         $email = $this->option('email') ?: $this->ask('Εισάγετε email για τον super-admin');

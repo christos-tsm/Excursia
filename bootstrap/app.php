@@ -14,7 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
-
+            \App\Http\Middleware\RedirectInvalidTenantUrls::class,
         ]);
 
         // Προσθήκη των middleware του Spatie για ρόλους και δικαιώματα
@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'tenant.active' => \App\Http\Middleware\CheckTenantIsActive::class,
+            'redirect.invalid.tenant' => \App\Http\Middleware\RedirectInvalidTenantUrls::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
