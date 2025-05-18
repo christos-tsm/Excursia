@@ -17,17 +17,22 @@ Route::get('/', function () {
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
     ]);
-});
+})->name('welcome');
 
 // Το γενικό dashboard έχει αφαιρεθεί καθώς δε θα χρησιμοποιείται
 
 // Dashboard για tenants (ταξιδιωτικά γραφεία)
 Route::get('/tenant/dashboard', function () {
     return Inertia::render('Tenant/Dashboard');
-})->middleware(['auth', 'verified'])->name('tenant.dashboard');
+})->middleware(['auth', 'verified', 'tenant.active'])->name('tenant.dashboard');
 
 // Ανακατεύθυνση του παλιού dashboard στο tenant dashboard
 Route::redirect('/dashboard', '/tenant/dashboard');
+
+// Σελίδα αναμονής έγκρισης για tenants
+Route::get('/pending', function () {
+    return Inertia::render('Admin/Tenants/Pending');
+})->middleware(['auth'])->name('admin.tenants.pending');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

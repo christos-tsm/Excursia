@@ -33,10 +33,17 @@ class AuthenticatedSessionController extends Controller {
 
         // Ανακατεύθυνση με βάση τον ρόλο του χρήστη
         $user = Auth::user();
+
         if ($user->hasRole('super-admin') || $user->hasRole('admin')) {
             return redirect()->intended(route('admin.dashboard', absolute: false));
         } elseif ($user->tenant_id) {
-            // Αν ο χρήστης ανήκει σε tenant (ταξιδιωτικό γραφείο)
+            // Έλεγχος αν ο tenant είναι ενεργός
+            $tenant = $user->tenant;
+            if (!$tenant->is_active) {
+                return redirect()->route('admin.tenants.pending');
+            }
+
+            // Αν ο χρήστης ανήκει σε tenant (ταξιδιωτικό γραφείο) και είναι ενεργός
             return redirect()->intended(route('tenant.dashboard', absolute: false));
         } else {
             // Ανακατεύθυνση όλων των άλλων χρηστών στο tenant dashboard
