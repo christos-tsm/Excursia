@@ -33,7 +33,6 @@ class AuthenticatedSessionController extends Controller {
 
         // Ανακατεύθυνση με βάση τον ρόλο του χρήστη
         $user = Auth::user();
-
         if ($user->hasRole('super-admin') || $user->hasRole('admin')) {
             return redirect()->intended(route('admin.dashboard', absolute: false));
         } elseif ($user->tenant_id) {
