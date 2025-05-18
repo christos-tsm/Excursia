@@ -132,10 +132,10 @@ export default function Register() {
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-between mt-6">
+                        <div className="flex items-center justify-between mt-6 text-sm">
                             <Link
                                 href={route('login')}
-                                className="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                className="text-primary-400 hover:text-primary-500"
                             >
                                 Έχετε ήδη λογαριασμό;
                             </Link>

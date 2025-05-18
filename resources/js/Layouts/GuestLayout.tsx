@@ -1,5 +1,5 @@
 import ApplicationLogo from "@/Components/ApplicationLogo";
-import { Link } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
 import { PropsWithChildren } from "react";
 
 export default function Guest({ children }: PropsWithChildren) {
@@ -11,7 +11,7 @@ export default function Guest({ children }: PropsWithChildren) {
                 </Link>
             </div>
 
-            <div className="mt-6 w-full overflow-hidden bg-white px-6 py-4 max-w-[50vw] sm:rounded-lg">
+            <div className="mt-6 w-full overflow-hidden bg-white px-6 py-4  sm:rounded-lg max-w-[500px]">
                 {children}
             </div>
         </div>

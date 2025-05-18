@@ -97,7 +97,7 @@ export default function Login({ status, canResetPassword }: { status?: string; c
             <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-gray-200">
                 <p className="text-sm">
                     Δεν έχετε λογαριασμό;{" "}
-                    <Link href={route("tenant.register.form")} className="text-primary-400">
+                    <Link href={route("tenant.register.form")} className="text-primary-400 hover:text-primary-500">
                         Εγγραφείτε εδώ
                     </Link>
                 </p>

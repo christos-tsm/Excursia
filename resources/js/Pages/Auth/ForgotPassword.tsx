@@ -2,7 +2,7 @@ import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
 
 export default function ForgotPassword({ status }: { status?: string }) {
@@ -21,9 +21,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
             <Head title="Forgot Password" />
 
             <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-                Forgot your password? No problem. Just let us know your email
-                address and we will email you a password reset link that will
-                allow you to choose a new one.
+                Ξεχάσατε τον κωδικό πρόσβασής σας; Κανένα πρόβλημα. Απλώς ενημερώστε μας για τη διεύθυνση email σας και θα σας στείλουμε μέσω email έναν σύνδεσμο επαναφοράς κωδικού πρόσβασης που θα σας επιτρέψει να επιλέξετε έναν νέο.
             </div>
 
             {status && (
@@ -45,9 +43,10 @@ export default function ForgotPassword({ status }: { status?: string }) {
 
                 <InputError message={errors.email} className="mt-2" />
 
-                <div className="mt-4 flex items-center justify-end">
+                <div className="mt-4 flex items-center justify-end text-sm">
+                    <Link href={route('login')} className="text-primary-400 hover:text-primary-500">Επιστοφή</Link>
                     <PrimaryButton className="ms-4" disabled={processing}>
-                        Email Password Reset Link
+                        Αποστολη συνδεσμου επαναφορας
                     </PrimaryButton>
                 </div>
             </form>
