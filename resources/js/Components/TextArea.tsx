@@ -14,7 +14,7 @@ export default forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAr
             <textarea
                 {...props}
                 className={
-                    'border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm ' +
+                    "rounded-md border-slate-300 focus:border-slate-400 duration-300 text-sm read-only:!border-slate-300 read-only:opacity-65 " +
                     className
                 }
                 ref={ref || localRef}

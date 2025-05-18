@@ -38,8 +38,8 @@ export function Pagination({ links }: PaginationProps) {
                         key={key}
                         href={link.url}
                         className={`mr-1 mb-1 px-4 py-2 text-sm border rounded focus:outline-none ${link.active
-                            ? 'border-indigo-500 bg-indigo-500 text-white'
-                            : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                            ? 'border-typo-300 bg-typo-300 text-white'
+                            : 'border-gray-300 bg-white text-typo-300 hover:bg-gray-50'
                             }`}
                     >
                         <span dangerouslySetInnerHTML={{ __html: label }} />

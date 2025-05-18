@@ -11,14 +11,39 @@ class TenantController extends Controller {
     /**
      * Display a listing of the resource.
      */
-    public function index() {
-        $tenants = Tenant::with('owner')
-            ->withCount('domains')
-            ->latest()
-            ->paginate(10);
+    public function index(Request $request) {
+        $query = Tenant::with('owner')
+            ->withCount('domains');
+
+        // Φιλτράρισμα με βάση το email ή το όνομα
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('email', 'like', "%{$search}%")
+                    ->orWhere('name', 'like', "%{$search}%");
+            });
+        }
+
+        // Φιλτράρισμα με βάση την κατάσταση
+        if ($request->has('status') && !empty($request->status)) {
+            if ($request->status === 'approved') {
+                $query->where('is_active', true);
+            } elseif ($request->status === 'pending') {
+                $query->where('is_active', false);
+            }
+        }
+
+        $tenants = $query->latest()->paginate(10)
+            ->withQueryString();
 
         return Inertia::render('Admin/Tenants/Index', [
             'tenants' => $tenants,
+            'filters' => [
+                'search' => $request->search ?? '',
+                'status' => $request->status ?? '',
+            ],
+            'success' => session('message'),
+            'error' => session('error')
         ]);
     }
 
@@ -45,6 +70,8 @@ class TenantController extends Controller {
 
         return Inertia::render('Admin/Tenants/Show', [
             'tenant' => $tenant,
+            'success' => session('message'),
+            'error' => session('error')
         ]);
     }
 
@@ -56,6 +83,8 @@ class TenantController extends Controller {
 
         return Inertia::render('Admin/Tenants/Edit', [
             'tenant' => $tenant,
+            'success' => session('message'),
+            'error' => session('error')
         ]);
     }
 
@@ -63,17 +92,30 @@ class TenantController extends Controller {
      * Update the specified resource in storage.
      */
     public function update(Request $request, Tenant $tenant) {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:tenants,email,' . $tenant->id],
-            'phone' => ['nullable', 'string', 'max:20'],
-            'description' => ['nullable', 'string'],
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => ['required', 'string', 'max:255'],
+                'email' => ['required', 'string', 'email', 'max:255', 'unique:tenants,email,' . $tenant->id],
+                'phone' => ['nullable', 'string', 'max:20', 'regex:/^[0-9\s]+$/'],
+                'description' => ['nullable', 'string'],
+            ]);
 
-        $tenant->update($validated);
+            // Strip empty spaces from phone field
+            $validated['phone'] = preg_replace('/\s+/', '', $validated['phone']);
 
-        return redirect()->route('admin.tenants.show', $tenant)
-            ->with('message', 'Η επιχείρηση ενημερώθηκε επιτυχώς');
+            $tenant->update($validated);
+
+            return redirect()->route('admin.tenants.show', $tenant)
+                ->with('message', 'Η επιχείρηση ενημερώθηκε επιτυχώς');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()
+                ->withErrors($e->validator)
+                ->withInput();
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Προέκυψε σφάλμα: ' . $e->getMessage())
+                ->withInput();
+        }
     }
 
     /**
@@ -92,7 +134,7 @@ class TenantController extends Controller {
     public function approve(Tenant $tenant) {
         // Έλεγχος αν το tenant είναι ήδη ενεργό
         if ($tenant->is_active) {
-            return redirect()->route('admin.tenants.show', $tenant)
+            return redirect()->route('admin.tenants.index', $tenant)
                 ->with('error', 'Η επιχείρηση είναι ήδη ενεργή');
         }
 
@@ -103,7 +145,7 @@ class TenantController extends Controller {
         // Ενημέρωση του ιδιοκτήτη με email
         // ... κώδικας για αποστολή email ...
 
-        return redirect()->route('admin.tenants.show', $tenant)
+        return redirect()->route('admin.tenants.index', $tenant)
             ->with('message', 'Η επιχείρηση εγκρίθηκε με επιτυχία');
     }
 
@@ -111,10 +153,18 @@ class TenantController extends Controller {
      * Reject a tenant
      */
     public function reject(Tenant $tenant) {
-        // Απόρριψη του tenant
-        // ... κώδικας για αποστολή email απόρριψης ...
 
-        return redirect()->route('admin.tenants.show', $tenant)
-            ->with('message', 'Η επιχείρηση απορρίφθηκε');
+        // ... κώδικας για αποστολή email απόρριψης ...
+        if (!$tenant->is_active) {
+            return redirect()->route('admin.tenants.index', $tenant)
+                ->with('error', 'Η επιχείρηση έχει ήδη απορριφθεί');
+        }
+
+        // Απόρριψη του tenant
+        $tenant->is_active = false;
+        $tenant->save();
+
+        return redirect()->route('admin.tenants.index', $tenant)
+            ->with('message', 'Η κατάσταση έγκρισης της επιχείρησης επαναφέρθηκε σε αναμονή έγκρισης');
     }
 }
