@@ -262,47 +262,11 @@ class TenantController extends Controller {
         }
 
         try {
-            // Δημιουργία της βάσης δεδομένων του tenant
-            $dbName = $tenant->database;
-            DB::statement("CREATE DATABASE IF NOT EXISTS `$dbName`");
-
             // Ενεργοποίηση του tenant
             $tenant->is_active = true;
             $tenant->save();
 
-            // Πρώτα εκτελούμε το migration για τον πίνακα cache
-            Artisan::call('tenants:artisan', [
-                'artisanCommand' => "migrate --path=database/migrations/tenant/2024_06_24_000000_create_cache_table.php --database=tenant",
-                '--tenant' => $tenant->id
-            ]);
-
-            // Εκτελούμε το migration για τον πίνακα jobs
-            Artisan::call('tenants:artisan', [
-                'artisanCommand' => "migrate --path=database/migrations/tenant/2024_06_24_000001_create_jobs_table.php --database=tenant",
-                '--tenant' => $tenant->id
-            ]);
-
-            // Εκτελούμε το migration για τον πίνακα users
-            Artisan::call('tenants:artisan', [
-                'artisanCommand' => "migrate --path=database/migrations/tenant/2014_10_12_000000_create_users_table.php --database=tenant",
-                '--tenant' => $tenant->id
-            ]);
-
-            // Εκτελούμε το migration για τους πίνακες permissions
-            Artisan::call('tenants:artisan', [
-                'artisanCommand' => "migrate --path=database/migrations/tenant/2024_06_23_000002_create_permission_tables.php --database=tenant",
-                '--tenant' => $tenant->id
-            ]);
-
-            // Εκτελούμε το migration για τον πίνακα domains
-            Artisan::call('tenants:artisan', [
-                'artisanCommand' => "migrate --path=database/migrations/tenant/create_tenant_domains_table.php --database=tenant",
-                '--tenant' => $tenant->id
-            ]);
-
-            // Δημιουργία των ρόλων και δικαιωμάτων
-            $tenant->makeCurrent();
-
+            // Δημιουργία των ρόλων και δικαιωμάτων (μία φορά σε επίπεδο εφαρμογής)
             // Reset cached roles and permissions
             app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
@@ -375,41 +339,20 @@ class TenantController extends Controller {
                 }
             }
 
-            // Αποδεσμεύουμε τον tenant προσωρινά
-            $tenant->forgetCurrent();
-
-            // Εκτέλεση του migration για τον πίνακα invitations
-            Artisan::call('tenants:artisan', [
-                'artisanCommand' => "migrate --path=database/migrations/tenant/2024_06_24_000002_create_invitations_table.php --database=tenant",
-                '--tenant' => $tenant->id
-            ]);
-
-            // Τέλος, εκτελούμε τα υπόλοιπα migrations
-            Artisan::call('tenants:artisan', [
-                'artisanCommand' => "migrate --path=database/migrations/tenant --database=tenant",
-                '--tenant' => $tenant->id
-            ]);
-
-            // Εισαγωγή του owner στη βάση του tenant
-            $this->syncOwnerToTenantDatabase($tenant);
-
-            // Συγχρονισμός των domains από την κύρια βάση στη βάση του tenant με αναγκαστικό συγχρονισμό
-            Artisan::call('tenants:add-domains-table', [
-                '--tenant' => $tenant->id,
-                '--force' => true
-            ]);
+            // Ανάθεση ρόλου "owner" στον ιδιοκτήτη του tenant
+            $owner = $tenant->owner;
+            if ($owner) {
+                $owner->assignRole('owner');
+                Log::info("Ανατέθηκε ο ρόλος 'owner' στον χρήστη με ID: {$owner->id}");
+            }
 
             // Ενημέρωση του ιδιοκτήτη με email
             // ... κώδικας για αποστολή email ...
 
             return redirect()->route('admin.tenants.index', $tenant)
-                ->with('message', 'Η επιχείρηση εγκρίθηκε με επιτυχία και η βάση δεδομένων δημιουργήθηκε');
+                ->with('message', 'Η επιχείρηση εγκρίθηκε με επιτυχία');
         } catch (\Exception $e) {
             Log::error('Tenant approval error: ' . $e->getMessage());
-
-            if (isset($tenant) && $tenant->exists) {
-                $tenant->forgetCurrent();
-            }
 
             return redirect()->route('admin.tenants.index', $tenant)
                 ->with('error', 'Προέκυψε σφάλμα κατά την έγκριση: ' . $e->getMessage());

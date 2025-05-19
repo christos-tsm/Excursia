@@ -24,7 +24,7 @@ interface AcceptInvitationProps extends PageProps {
 
 export default function Accept({ invitation, email, name, error }: AcceptInvitationProps) {
     const { data, setData, post, processing, errors } = useForm({
-        name: name || '',
+        name: name || invitation.name || '',
         password: '',
         password_confirmation: '',
     });
@@ -71,7 +71,7 @@ export default function Accept({ invitation, email, name, error }: AcceptInvitat
                                 id="email"
                                 type="email"
                                 className="mt-1 block w-full"
-                                value={email}
+                                value={invitation.email || email}
                                 disabled
                             />
                         </div>

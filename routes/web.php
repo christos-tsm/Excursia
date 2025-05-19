@@ -7,6 +7,7 @@ use App\Http\Controllers\TripController;
 use App\Http\Controllers\InvitationController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 // Ανακατεύθυνση από την παλιά διαδρομή register στη νέα
@@ -21,34 +22,18 @@ Route::get('/', function () {
     ]);
 })->name('welcome');
 
-// Το γενικό dashboard έχει αφαιρεθεί καθώς δε θα χρησιμοποιείται
-
-// ΑΦΑΙΡΕΣΗ: Κανονικές διαδρομές για tenants (μέσω subdomain)
-// ΑΥΤΟ ΤΟ BLOCK ΘΑ ΑΦΑΙΡΕΘΕΙ ΠΛΗΡΩΣ
-//Route::middleware(['auth', 'verified', 'tenant.active'])->prefix('tenant')->name('tenant.')->group(function () {
-//    // Dashboard
-//    Route::get('/dashboard', function () {
-//        return Inertia::render('Tenant/Dashboard');
-//    })->name('dashboard');
-//
-//    // Trips CRUD
-//    Route::resource('trips', TripController::class);
-//    Route::post('/trips/{trip}/toggle-publish', [TripController::class, 'togglePublish'])->name('trips.toggle-publish');
-//
-//    // Invitations
-//    Route::resource('invitations', InvitationController::class)->except(['show', 'edit', 'update']);
-//    Route::post('/invitations/{invitation}/resend', [InvitationController::class, 'resend'])->name('invitations.resend');
-//});
-
-// Ανακατεύθυνση του παλιού dashboard στο tenant dashboard
-Route::redirect('/dashboard', '/tenant/dashboard')->name('dashboard');
-
-// Ανακατεύθυνση του /tenant/ URLs στο welcome page με μήνυμα να χρησιμοποιηθεί το σωστό URL
-Route::redirect('/tenant', '/')->name('tenant.redirect');
-Route::redirect('/tenant/dashboard', '/')->name('tenant.dashboard.redirect');
-Route::redirect('/tenant/invitations', '/')->name('tenant.invitations.redirect');
-Route::redirect('/tenant/invitations/create', '/')->name('tenant.invitations.create.redirect');
-Route::redirect('/tenant/trips', '/')->name('tenant.trips.redirect');
+// Ανακατεύθυνση του παλιού dashboard στο admin dashboard για διαχειριστές
+// και στο tenant dashboard για τους χρήστες tenants
+Route::middleware(['auth'])->get('/dashboard', function () {
+    $user = Auth::user();
+    if ($user->hasRole('super-admin') || $user->hasRole('admin')) {
+        return redirect()->route('admin.dashboard');
+    } elseif ($user->tenant_id) {
+        return redirect()->route('tenant.dashboard', ['tenant_id' => $user->tenant_id]);
+    } else {
+        return redirect('/');
+    }
+})->name('dashboard');
 
 // Σελίδα αναμονής έγκρισης για tenants
 Route::get('/pending', function () {
@@ -84,30 +69,35 @@ Route::middleware(['auth', 'role:super-admin|admin'])->prefix('admin')->name('ad
         ->name('tenants.reject');
 });
 
-// Διαδρομές για τενάντς μέσω path (για τοπική ανάπτυξη αλλά και production)
-Route::prefix('tenant/{domain}')->middleware(['web', 'auth', App\Http\Middleware\SetTenantFromPath::class])->group(function () {
+// Διαδρομές για τενάντς - νέα έκδοση με tenant_id
+Route::prefix('tenant/{tenant_id}')->middleware(['web', 'auth', 'tenant.access'])->group(function () {
     // Dashboard
-    Route::get('/dashboard', function () {
-        return Inertia::render('Tenant/Dashboard');
-    })->middleware(['verified', 'tenant.active'])->name('tenant.dashboard');
+    Route::get('/dashboard', function ($tenant_id) {
+        $user = Auth::user();
+        $tenant = \App\Models\Tenant::findOrFail($tenant_id);
 
-    // Trips CRUD (path-based)
-    Route::middleware(['verified', 'tenant.active'])->name('tenant.')->group(function () {
+        return Inertia::render('Tenant/Dashboard', [
+            'tenant' => $tenant,
+        ]);
+    })->middleware(['verified'])->name('tenant.dashboard');
+
+    // Trips CRUD
+    Route::middleware(['verified'])->name('tenant.')->group(function () {
         Route::get('/trips', [TripController::class, 'index'])->name('trips.index');
         Route::get('/trips/create', [TripController::class, 'create'])->name('trips.create');
         Route::post('/trips', [TripController::class, 'store'])->name('trips.store');
-        Route::get('/trips/{trip}', [TripController::class, 'show'])->name('trips.show');
-        Route::get('/trips/{trip}/edit', [TripController::class, 'edit'])->name('trips.edit');
-        Route::put('/trips/{trip}', [TripController::class, 'update'])->name('trips.update');
-        Route::delete('/trips/{trip}', [TripController::class, 'destroy'])->name('trips.destroy');
-        Route::post('/trips/{trip}/toggle-publish', [TripController::class, 'togglePublish'])->name('trips.toggle-publish');
+        Route::get('/trips/{trip}', [TripController::class, 'show'])->middleware('tenant.resource')->name('trips.show');
+        Route::get('/trips/{trip}/edit', [TripController::class, 'edit'])->middleware('tenant.resource')->name('trips.edit');
+        Route::put('/trips/{trip}', [TripController::class, 'update'])->middleware('tenant.resource')->name('trips.update');
+        Route::delete('/trips/{trip}', [TripController::class, 'destroy'])->middleware('tenant.resource')->name('trips.destroy');
+        Route::post('/trips/{trip}/toggle-publish', [TripController::class, 'togglePublish'])->middleware('tenant.resource')->name('trips.toggle-publish');
 
-        // Invitations (path-based)
+        // Invitations
         Route::get('/invitations', [InvitationController::class, 'index'])->name('invitations.index');
         Route::get('/invitations/create', [InvitationController::class, 'create'])->name('invitations.create');
         Route::post('/invitations', [InvitationController::class, 'store'])->name('invitations.store');
-        Route::delete('/invitations/{invitation}', [InvitationController::class, 'destroy'])->name('invitations.destroy');
-        Route::post('/invitations/{invitation}/resend', [InvitationController::class, 'resend'])->name('invitations.resend');
+        Route::delete('/invitations/{invitation}', [InvitationController::class, 'destroy'])->middleware('tenant.resource')->name('invitations.destroy')->where('invitation', '[0-9]+');
+        Route::post('/invitations/{invitation}/resend', [InvitationController::class, 'resend'])->middleware('tenant.resource')->name('invitations.resend')->where('invitation', '[0-9]+');
     });
 });
 

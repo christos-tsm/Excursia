@@ -2,13 +2,12 @@
 
 namespace App\Models;
 
-use App\TenantFinder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Spatie\Multitenancy\Models\Tenant as BaseTenant;
 
-class Tenant extends BaseTenant {
+class Tenant extends Model {
     use HasFactory;
 
     protected $fillable = [
@@ -17,7 +16,6 @@ class Tenant extends BaseTenant {
         'phone',
         'logo',
         'description',
-        'database',
         'is_active',
         'owner_id'
     ];
@@ -34,7 +32,11 @@ class Tenant extends BaseTenant {
         return $this->hasMany(Domain::class);
     }
 
-    public static function getCustomTenantFinder(): string {
-        return TenantFinder::class;
+    public function trips(): HasMany {
+        return $this->hasMany(Trip::class);
+    }
+
+    public function invitations(): HasMany {
+        return $this->hasMany(Invitation::class);
     }
 }

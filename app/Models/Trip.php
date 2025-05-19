@@ -4,13 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Multitenancy\Models\Concerns\UsesTenantConnection;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Trip extends Model {
     use HasFactory;
-    use UsesTenantConnection; // Αυτό εξασφαλίζει ότι το μοντέλο θα χρησιμοποιεί τη σύνδεση του tenant
 
     protected $fillable = [
+        'tenant_id',
         'title',
         'description',
         'destination',
@@ -22,9 +22,16 @@ class Trip extends Model {
     ];
 
     protected $casts = [
+        'price' => 'decimal:2',
         'departure_date' => 'date',
         'return_date' => 'date',
-        'price' => 'decimal:2',
         'is_published' => 'boolean',
     ];
+
+    /**
+     * Το tenant στο οποίο ανήκει το ταξίδι
+     */
+    public function tenant(): BelongsTo {
+        return $this->belongsTo(Tenant::class);
+    }
 }

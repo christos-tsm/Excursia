@@ -127,6 +127,17 @@ const TenantShow = ({ tenant }: { tenant: Tenant }) => {
                             />
                         </div>
                         <div className="flex flex-col gap-2 flex-1">
+                            <label htmlFor="domain" className="block text-sm font-medium">Domain</label>
+                            {tenant.domains?.map((domain) => (
+                                <TextInput
+                                    key={domain.id}
+                                    name="domain"
+                                    value={domain.domain}
+                                    readOnly={true}
+                                />
+                            ))}
+                        </div>
+                        <div className="flex flex-col gap-2 flex-1">
                             <label htmlFor="created_at" className="block text-sm font-medium">Ημερομηνία Εγγραφής</label>
                             <TextInput
                                 name="created_at"

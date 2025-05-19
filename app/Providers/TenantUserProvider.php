@@ -42,7 +42,7 @@ class TenantUserProvider extends EloquentUserProvider {
 
         // Ειδική περίπτωση για localhost - έλεγχος για domain parameter στο URL
         $domainParam = request()->get('domain');
-        if ($host === 'localhost' && $domainParam) {
+        if ($host === 'localhost' || $host === 'localhost:8000' && $domainParam) {
             Log::info("Localhost με domain parameter: {$domainParam}");
             $domain = DB::table('domains')->where('domain', $domainParam)->first();
 

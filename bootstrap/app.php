@@ -24,6 +24,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'tenant.active' => \App\Http\Middleware\CheckTenantIsActive::class,
             'redirect.invalid.tenant' => \App\Http\Middleware\RedirectInvalidTenantUrls::class,
+            'tenant.access' => \App\Http\Middleware\TenantAccessMiddleware::class,
+            'tenant.resource' => \App\Http\Middleware\TenantResourceAccessMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

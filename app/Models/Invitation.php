@@ -6,13 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\URL;
-use Spatie\Multitenancy\Models\Concerns\UsesTenantConnection;
 
 class Invitation extends Model {
     use HasFactory;
-    use UsesTenantConnection;
 
     protected $fillable = [
+        'tenant_id',
         'email',
         'name',
         'token',
@@ -27,7 +26,14 @@ class Invitation extends Model {
     ];
 
     /**
-     * Σχέση με τον χρήστη που έστειλε την πρόσκληση
+     * Το tenant στο οποίο ανήκει η πρόσκληση
+     */
+    public function tenant(): BelongsTo {
+        return $this->belongsTo(Tenant::class);
+    }
+
+    /**
+     * Ο χρήστης που έστειλε την πρόσκληση
      */
     public function inviter(): BelongsTo {
         return $this->belongsTo(User::class, 'invited_by');
@@ -59,6 +65,6 @@ class Invitation extends Model {
      * Δημιουργία URL αποδοχής πρόσκλησης
      */
     public function getAcceptUrl(): string {
-        return URL::signedRoute('invitation.accept', ['token' => $this->token]);
+        return URL::signedRoute('invitation.accept.form', ['token' => $this->token]);
     }
 }

@@ -12,7 +12,8 @@ class TripController extends Controller {
      * Εμφάνιση λίστας ταξιδιών
      */
     public function index(Request $request) {
-        $query = Trip::query();
+        $tenant_id = $request->route('tenant_id');
+        $query = Trip::where('tenant_id', $tenant_id);
 
         // Φιλτράρισμα με βάση τον τίτλο ή τον προορισμό
         if ($request->has('search') && !empty($request->search)) {
@@ -37,6 +38,7 @@ class TripController extends Controller {
 
         return Inertia::render('Tenant/Trips/Index', [
             'trips' => $trips,
+            'tenant_id' => $tenant_id,
             'filters' => [
                 'search' => $request->search ?? '',
                 'status' => $request->status ?? '',
@@ -49,8 +51,11 @@ class TripController extends Controller {
     /**
      * Εμφάνιση φόρμας δημιουργίας ταξιδιού
      */
-    public function create() {
-        return Inertia::render('Tenant/Trips/Create');
+    public function create(Request $request) {
+        $tenant_id = $request->route('tenant_id');
+        return Inertia::render('Tenant/Trips/Create', [
+            'tenant_id' => $tenant_id
+        ]);
     }
 
     /**
@@ -58,6 +63,8 @@ class TripController extends Controller {
      */
     public function store(Request $request) {
         try {
+            $tenant_id = $request->route('tenant_id');
+
             $validated = $request->validate([
                 'title' => ['required', 'string', 'max:255'],
                 'description' => ['nullable', 'string'],
@@ -69,10 +76,15 @@ class TripController extends Controller {
                 'is_published' => ['boolean'],
             ]);
 
+            // Προσθήκη του tenant_id
+            $validated['tenant_id'] = $tenant_id;
+
             $trip = Trip::create($validated);
 
-            return redirect()->route('tenant.trips.show', $trip)
-                ->with('message', 'Το ταξίδι δημιουργήθηκε επιτυχώς');
+            return redirect()->route('tenant.trips.show', [
+                'tenant_id' => $tenant_id,
+                'trip' => $trip->id
+            ])->with('message', 'Το ταξίδι δημιουργήθηκε επιτυχώς');
         } catch (\Exception $e) {
             return back()
                 ->with('error', 'Προέκυψε σφάλμα: ' . $e->getMessage())
@@ -83,9 +95,12 @@ class TripController extends Controller {
     /**
      * Εμφάνιση λεπτομερειών ταξιδιού
      */
-    public function show(Trip $trip) {
+    public function show(Request $request, Trip $trip) {
+        $tenant_id = $request->route('tenant_id');
+
         return Inertia::render('Tenant/Trips/Show', [
             'trip' => $trip,
+            'tenant_id' => $tenant_id,
             'success' => session('message'),
             'error' => session('error')
         ]);
@@ -94,9 +109,12 @@ class TripController extends Controller {
     /**
      * Εμφάνιση φόρμας επεξεργασίας ταξιδιού
      */
-    public function edit(Trip $trip) {
+    public function edit(Request $request, Trip $trip) {
+        $tenant_id = $request->route('tenant_id');
+
         return Inertia::render('Tenant/Trips/Edit', [
             'trip' => $trip,
+            'tenant_id' => $tenant_id,
             'success' => session('message'),
             'error' => session('error')
         ]);
@@ -107,6 +125,8 @@ class TripController extends Controller {
      */
     public function update(Request $request, Trip $trip) {
         try {
+            $tenant_id = $request->route('tenant_id');
+
             $validated = $request->validate([
                 'title' => ['required', 'string', 'max:255'],
                 'description' => ['nullable', 'string'],
@@ -120,8 +140,10 @@ class TripController extends Controller {
 
             $trip->update($validated);
 
-            return redirect()->route('tenant.trips.show', $trip)
-                ->with('message', 'Το ταξίδι ενημερώθηκε επιτυχώς');
+            return redirect()->route('tenant.trips.show', [
+                'tenant_id' => $tenant_id,
+                'trip' => $trip->id
+            ])->with('message', 'Το ταξίδι ενημερώθηκε επιτυχώς');
         } catch (\Exception $e) {
             return back()
                 ->with('error', 'Προέκυψε σφάλμα: ' . $e->getMessage())
@@ -132,11 +154,13 @@ class TripController extends Controller {
     /**
      * Διαγραφή ταξιδιού
      */
-    public function destroy(Trip $trip) {
+    public function destroy(Request $request, Trip $trip) {
         try {
+            $tenant_id = $request->route('tenant_id');
+
             $trip->delete();
 
-            return redirect()->route('tenant.trips.index')
+            return redirect()->route('tenant.trips.index', ['tenant_id' => $tenant_id])
                 ->with('message', 'Το ταξίδι διαγράφηκε επιτυχώς');
         } catch (\Exception $e) {
             return back()
@@ -147,7 +171,9 @@ class TripController extends Controller {
     /**
      * Δημοσίευση/απόσυρση ταξιδιού
      */
-    public function togglePublish(Trip $trip) {
+    public function togglePublish(Request $request, Trip $trip) {
+        $tenant_id = $request->route('tenant_id');
+
         $trip->is_published = !$trip->is_published;
         $trip->save();
 
