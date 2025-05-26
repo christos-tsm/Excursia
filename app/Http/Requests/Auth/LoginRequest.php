@@ -37,6 +37,31 @@ class LoginRequest extends FormRequest {
     public function authenticate(): void {
         $this->ensureIsNotRateLimited();
 
+        // Πρώτα ελέγχουμε τα credentials χωρίς να κάνουμε login
+        if (! Auth::validate($this->only('email', 'password'))) {
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => trans('auth.failed'),
+            ]);
+        }
+
+        // Βρίσκουμε τον χρήστη για να ελέγξουμε την κατάσταση του tenant
+        $user = \App\Models\User::where('email', $this->email)->first();
+
+        // Ελέγχουμε αν ο χρήστης ανήκει σε tenant και αν αυτός είναι εγκεκριμένος
+        if ($user && $user->tenant_id) {
+            $tenant = $user->tenant;
+            if (!$tenant || !$tenant->is_active) {
+                RateLimiter::hit($this->throttleKey());
+
+                throw ValidationException::withMessages([
+                    'email' => 'Ο λογαριασμός σας δεν έχει εγκριθεί ακόμα. Παρακαλώ περιμένετε την έγκριση από τον διαχειριστή.',
+                ]);
+            }
+        }
+
+        // Αν όλα είναι εντάξει, προχωράμε με το authentication
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 

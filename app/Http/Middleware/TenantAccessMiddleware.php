@@ -46,8 +46,13 @@ class TenantAccessMiddleware {
         // Έλεγχος αν το tenant είναι ενεργό
         $tenant = Tenant::find($tenant_id);
         if (!$tenant || !$tenant->is_active) {
-            return redirect()->route('welcome')
-                ->with('error', 'Το tenant δεν είναι ενεργό.');
+            // Κάνουμε logout τον χρήστη και τον ανακατευθύνουμε στο login με μήνυμα
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')
+                ->with('status', 'Ο λογαριασμός σας δεν έχει εγκριθεί ακόμα. Παρακαλώ περιμένετε την έγκριση από τον διαχειριστή.');
         }
 
         return $next($request);

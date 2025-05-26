@@ -121,10 +121,7 @@ export default function Accept({ invitation, email, name, error }: AcceptInvitat
                             </p>
                         </div>
 
-                        <PrimaryButton
-                            className="w-full"
-                            disabled={processing}
-                        >
+                        <PrimaryButton disabled={processing}>
                             Αποδοχή Πρόσκλησης
                         </PrimaryButton>
                     </form>

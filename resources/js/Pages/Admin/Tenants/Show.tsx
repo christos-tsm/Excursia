@@ -119,14 +119,6 @@ const TenantShow = ({ tenant }: { tenant: Tenant }) => {
                 <div className='p-4 border-t border-slate-200 mt-4 bg-white rounded-md shadow-sm'>
                     <div className="flex gap-4">
                         <div className="flex flex-col gap-2 flex-1">
-                            <label htmlFor="database" className="block text-sm font-medium">Database</label>
-                            <TextInput
-                                name="database"
-                                value={tenant.database}
-                                readOnly={true}
-                            />
-                        </div>
-                        <div className="flex flex-col gap-2 flex-1">
                             <label htmlFor="domain" className="block text-sm font-medium">Domain</label>
                             {tenant.domains?.map((domain) => (
                                 <TextInput

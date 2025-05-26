@@ -24,8 +24,14 @@ class CheckTenantIsActive {
         // Ελέγχουμε αν ο χρήστης ανήκει σε tenant και αν αυτός είναι ενεργός
         if ($user->tenant_id) {
             $tenant = $user->tenant;
-            if (!$tenant->is_active) {
-                return redirect()->route('admin.tenants.pending');
+            if (!$tenant || !$tenant->is_active) {
+                // Κάνουμε logout τον χρήστη και τον ανακατευθύνουμε στο login με μήνυμα
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return redirect()->route('login')
+                    ->with('status', 'Ο λογαριασμός σας δεν έχει εγκριθεί ακόμα. Παρακαλώ περιμένετε την έγκριση από τον διαχειριστή.');
             }
         }
 

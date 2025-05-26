@@ -35,10 +35,7 @@ Route::middleware(['auth'])->get('/dashboard', function () {
     }
 })->name('dashboard');
 
-// Σελίδα αναμονής έγκρισης για tenants
-Route::get('/pending', function () {
-    return Inertia::render('Admin/Tenants/Pending');
-})->middleware(['auth'])->name('admin.tenants.pending');
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

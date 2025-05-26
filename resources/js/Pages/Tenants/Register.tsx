@@ -198,23 +198,6 @@ export default function Register() {
                             </div>
 
                             <div className="mb-4">
-                                <InputLabel htmlFor="domain" value="Επιθυμητό Subdomain (προαιρετικό)" />
-                                <div className="flex items-center">
-                                    <TextInput
-                                        id="domain"
-                                        type="text"
-                                        name="domain"
-                                        value={data.domain}
-                                        className="mt-1 block w-full"
-                                        onChange={(e) => setData('domain', e.target.value)}
-                                    />
-                                    <span className="ml-2 text-gray-600">.excursia.com</span>
-                                </div>
-                                <p className="mt-1 text-sm text-gray-500">Αν αφεθεί κενό, θα δημιουργηθεί αυτόματα από το όνομα της επιχείρησης.</p>
-                                <InputError message={errors.domain} className="mt-2" />
-                            </div>
-
-                            <div className="mb-4">
                                 <InputLabel htmlFor="description" value="Περιγραφή Επιχείρησης" />
                                 <TextArea
                                     id="description"

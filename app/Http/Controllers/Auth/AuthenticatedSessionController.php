@@ -39,15 +39,8 @@ class AuthenticatedSessionController extends Controller {
         if ($user->hasRole('super-admin') || $user->hasRole('admin')) {
             return redirect()->intended(route('admin.dashboard'));
         } elseif ($user->tenant_id) {
-            // Έλεγχος αν ο tenant είναι ενεργός
-            $tenant = $user->tenant;
-            if (!$tenant || !$tenant->is_active) {
-                Log::info('Το tenant δεν είναι ενεργό ή δεν βρέθηκε');
-                return redirect()->route('admin.tenants.pending');
-            }
-
             // Ανακατεύθυνση στο tenant dashboard
-            return redirect()->intended(route('tenant.dashboard', ['tenant_id' => $tenant->id]));
+            return redirect()->intended(route('tenant.dashboard', ['tenant_id' => $user->tenant->id]));
         } else {
             // Ανακατεύθυνση όλων των άλλων χρηστών στην αρχική σελίδα
             return redirect()->intended('/');
