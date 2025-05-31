@@ -6,7 +6,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { PropsWithChildren, ReactNode, useState, useEffect } from 'react';
 import { User } from '@/types';
 import { PageProps } from '@/types';
-import { CalendarCheck2, LayoutDashboard, Map, Users, Mail } from 'lucide-react';
+import { CalendarCheck2, LayoutDashboard, Map, Users, Mail, Eye, BarChart3, Settings, CheckCircle, MessageCircle } from 'lucide-react';
 import { getCurrentTenantDomain } from '@/Utils/tenant';
 
 export default function Authenticated({ header, children }: PropsWithChildren<{ header?: ReactNode }>) {
@@ -38,44 +38,112 @@ export default function Authenticated({ header, children }: PropsWithChildren<{ 
         return currentPath.includes(path);
     };
 
-    const tenantRoutes = [
-        {
-            name: 'Γενικά',
-            path: 'dashboard',
-            icon: LayoutDashboard,
-            current: isCurrentRoute('/dashboard'),
-        },
-        {
-            name: 'Ταξίδια',
-            path: 'trips',
-            icon: Map,
-            current: isCurrentRoute('/trips'),
-        },
-        {
-            name: 'Πελάτες',
-            path: 'dashboard', // προσωρινά
-            icon: Users,
-            current: isCurrentRoute('/clients'),
-        },
-        {
-            name: 'Προγράμματα',
-            path: 'dashboard', // προσωρινά
-            icon: CalendarCheck2,
-            current: isCurrentRoute('/schedules'),
-        },
-        {
-            name: 'Προσωπικό',
-            path: 'dashboard', // προσωρινά
-            icon: Users,
-            current: isCurrentRoute('/staff'),
-        },
-        {
-            name: 'Προσκλήσεις',
-            path: 'invitations',
-            icon: Mail,
-            current: isCurrentRoute('/invitations'),
-        },
-    ];
+    // Προσδιορισμός των διαθέσιμων routes βάσει του ρόλου
+    const getTenantRoutes = () => {
+        const userRoles = user.roles?.map(role => role.name) || [];
+
+        // Owner - πλήρες navigation
+        if (userRoles.includes('owner')) {
+            return [
+                {
+                    name: 'Γενικά',
+                    path: 'dashboard',
+                    icon: LayoutDashboard,
+                    current: isCurrentRoute('/dashboard'),
+                },
+                {
+                    name: 'Ταξίδια',
+                    path: 'trips',
+                    icon: Map,
+                    current: isCurrentRoute('/trips'),
+                },
+                {
+                    name: 'Προσκλήσεις',
+                    path: 'invitations',
+                    icon: Mail,
+                    current: isCurrentRoute('/invitations'),
+                },
+                {
+                    name: 'Αναφορές',
+                    path: 'dashboard', // προσωρινά
+                    icon: BarChart3,
+                    current: isCurrentRoute('/reports'),
+                },
+                {
+                    name: 'Πελάτες',
+                    path: 'dashboard', // προσωρινά
+                    icon: Users,
+                    current: isCurrentRoute('/clients'),
+                },
+                {
+                    name: 'Ρυθμίσεις',
+                    path: 'dashboard', // προσωρινά
+                    icon: Settings,
+                    current: isCurrentRoute('/settings'),
+                },
+            ];
+        }
+
+        // Guide - εστιασμένο σε ταξίδια
+        if (userRoles.includes('guide')) {
+            return [
+                {
+                    name: 'Γενικά',
+                    path: 'dashboard',
+                    icon: LayoutDashboard,
+                    current: isCurrentRoute('/dashboard'),
+                },
+                {
+                    name: 'Ταξίδια',
+                    path: 'trips',
+                    icon: Map,
+                    current: isCurrentRoute('/trips'),
+                },
+                {
+                    name: 'Πρόγραμμα',
+                    path: 'dashboard', // προσωρινά
+                    icon: CalendarCheck2,
+                    current: isCurrentRoute('/schedule'),
+                },
+                {
+                    name: 'Ομάδες',
+                    path: 'dashboard', // προσωρινά
+                    icon: Users,
+                    current: isCurrentRoute('/groups'),
+                },
+            ];
+        }
+
+        // Staff - βασικές λειτουργίες
+        return [
+            {
+                name: 'Γενικά',
+                path: 'dashboard',
+                icon: LayoutDashboard,
+                current: isCurrentRoute('/dashboard'),
+            },
+            {
+                name: 'Ταξίδια',
+                path: 'trips',
+                icon: Eye,
+                current: isCurrentRoute('/trips'),
+            },
+            {
+                name: 'Καθήκοντα',
+                path: 'dashboard', // προσωρινά
+                icon: CheckCircle,
+                current: isCurrentRoute('/tasks'),
+            },
+            {
+                name: 'Επικοινωνία',
+                path: 'dashboard', // προσωρινά
+                icon: MessageCircle,
+                current: isCurrentRoute('/communication'),
+            },
+        ];
+    };
+
+    const tenantRoutes = getTenantRoutes();
 
     return (
         <div className="min-h-screen bg-gray-100 flex">

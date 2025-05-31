@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Hash;
 
 class LoginRequest extends FormRequest {
     /**
@@ -37,8 +38,24 @@ class LoginRequest extends FormRequest {
     public function authenticate(): void {
         $this->ensureIsNotRateLimited();
 
-        // Πρώτα ελέγχουμε τα credentials χωρίς να κάνουμε login
-        if (! Auth::validate($this->only('email', 'password'))) {
+        $email = $this->email;
+        $password = $this->password;
+        $user = null;
+
+        // Προσπαθούμε να βρούμε χρήστη με το δοθέν email
+        $user = \App\Models\User::where('email', $email)->first();
+
+        // Αν δε βρήκαμε χρήστη, ψάχνουμε αν το email ανήκει σε κάποιο tenant
+        if (!$user) {
+            $tenant = \App\Models\Tenant::where('email', $email)->first();
+            if ($tenant && $tenant->owner_id) {
+                // Βρίσκουμε τον owner του tenant
+                $user = \App\Models\User::find($tenant->owner_id);
+            }
+        }
+
+        // Αν δε βρήκαμε χρήστη με κανέναν τρόπο, επιστρέφουμε σφάλμα
+        if (!$user) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -46,11 +63,17 @@ class LoginRequest extends FormRequest {
             ]);
         }
 
-        // Βρίσκουμε τον χρήστη για να ελέγξουμε την κατάσταση του tenant
-        $user = \App\Models\User::where('email', $this->email)->first();
+        // Ελέγχουμε το password
+        if (!Hash::check($password, $user->password)) {
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => trans('auth.failed'),
+            ]);
+        }
 
         // Ελέγχουμε αν ο χρήστης ανήκει σε tenant και αν αυτός είναι εγκεκριμένος
-        if ($user && $user->tenant_id) {
+        if ($user->tenant_id) {
             $tenant = $user->tenant;
             if (!$tenant || !$tenant->is_active) {
                 RateLimiter::hit($this->throttleKey());
@@ -61,14 +84,8 @@ class LoginRequest extends FormRequest {
             }
         }
 
-        // Αν όλα είναι εντάξει, προχωράμε με το authentication
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
-            RateLimiter::hit($this->throttleKey());
-
-            throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
-            ]);
-        }
+        // Εάν όλα είναι εντάξει, συνδέουμε τον χρήστη
+        Auth::login($user, $this->boolean('remember'));
 
         RateLimiter::clear($this->throttleKey());
     }

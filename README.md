@@ -59,3 +59,49 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+# Excursia - Tourism Management System
+
+## Λειτουργίες
+
+### Σύστημα Αυθεντικοποίησης με Διπλό Email
+
+Η εφαρμογή υποστηρίζει σύνδεση χρηστών με δύο διαφορετικά email addresses:
+
+1. **Προσωπικό Email**: Το email που εισάγει ο χρήστης κατά την εγγραφή του προσωπικού του λογαριασμού
+2. **Επιχειρησιακό Email**: Το email της επιχείρησης που εισάγεται κατά τη δημιουργία του tenant
+
+#### Πώς Λειτουργεί
+
+Όταν ένας χρήστης προσπαθεί να συνδεθεί:
+
+1. Το σύστημα ψάχνει πρώτα για χρήστη με το δοθέν email
+2. Αν δεν βρει, ψάχνει για tenant με αυτό το email
+3. Αν βρει tenant, χρησιμοποιεί το `owner_id` για να βρει τον αντίστοιχο χρήστη
+4. Ελέγχει τον κωδικό πρόσβασης (πάντα του χρήστη, όχι του tenant)
+5. Ελέγχει αν το tenant είναι ενεργό
+6. Συνδέει τον χρήστη
+
+#### Παράδειγμα
+
+Αν κατά την εγγραφή δόθηκαν:
+- Προσωπικό email: `john@personal.com`
+- Επιχειρησιακό email: `info@company.com`
+- Κωδικός: `mypassword123`
+
+Ο χρήστης μπορεί να συνδεθεί με:
+- Email: `john@personal.com`, Password: `mypassword123` **✓**
+- Email: `info@company.com`, Password: `mypassword123` **✓**
+
+#### Ασφάλεια
+
+- Ο κωδικός πρόσβασης ελέγχεται πάντα έναντι του χρήστη (owner)
+- Η σύνδεση επιτρέπεται μόνο αν το tenant είναι ενεργό
+- Rate limiting εφαρμόζεται για προστασία από brute force επιθέσεις
+
+#### Tests
+
+Η λειτουργία καλύπτεται με automated tests:
+- `test_owner_can_login_with_personal_email()`
+- `test_owner_can_login_with_business_email()`
+- `test_inactive_tenant_owner_cannot_login()`

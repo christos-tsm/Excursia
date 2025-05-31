@@ -73,9 +73,31 @@ Route::prefix('tenant/{tenant_id}')->middleware(['web', 'auth', 'tenant.access']
         $user = Auth::user();
         $tenant = \App\Models\Tenant::findOrFail($tenant_id);
 
-        return Inertia::render('Tenant/Dashboard', [
-            'tenant' => $tenant,
-        ]);
+        // Φορτώνουμε τους ρόλους του χρήστη
+        $userRoles = $user->roles->pluck('name')->toArray();
+
+        // Φερνουμε τους χρήστες που ειναι κατω απο τον tenant μαζι με ονόματα, email, roles, τηλεφωνα κλπ.
+        $users = \App\Models\User::where('tenant_id', $tenant_id)->get();
+        // dd($users);
+
+        // return inertia based on the role of the user
+        if ($user->hasRole('owner')) {
+            return Inertia::render('Tenant/Dashboard/OwnerDashboard', [
+                'tenant' => $tenant,
+                'userRoles' => $userRoles,
+                'users' => $users,
+            ]);
+        } elseif ($user->hasRole('guide')) {
+            return Inertia::render('Tenant/Dashboard/GuideDashboard', [
+                'tenant' => $tenant,
+                'userRoles' => $userRoles,
+            ]);
+        } else {
+            return Inertia::render('Tenant/Dashboard/StaffDashboard', [
+                'tenant' => $tenant,
+                'userRoles' => $userRoles,
+            ]);
+        }
     })->middleware(['verified'])->name('tenant.dashboard');
 
     // Trips CRUD
