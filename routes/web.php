@@ -77,8 +77,44 @@ Route::prefix('tenant/{tenant_id}')->middleware(['web', 'auth', 'tenant.access']
         $userRoles = $user->roles->pluck('name')->toArray();
 
         // Φερνουμε τους χρήστες που ειναι κατω απο τον tenant μαζι με ονόματα, email, roles, τηλεφωνα κλπ.
-        $users = \App\Models\User::where('tenant_id', $tenant_id)->get();
-        // dd($users);
+        $users = \App\Models\User::where('tenant_id', $tenant_id)
+            ->with(['roles'])
+            ->select('id', 'name', 'email', 'created_at', 'updated_at')
+            ->get()
+            ->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'roles' => $user->roles->pluck('name')->toArray(),
+                    'status' => 'accepted',
+                    'created_at' => $user->created_at,
+                    'updated_at' => $user->updated_at,
+                    'type' => 'user'
+                ];
+            });
+
+        // Φερνουμε τις pending προσκλήσεις
+        $pendingInvitations = \App\Models\Invitation::where('tenant_id', $tenant_id)
+            ->whereNull('accepted_at')
+            ->where('expires_at', '>', now())
+            ->select('id', 'name', 'email', 'role', 'created_at', 'updated_at')
+            ->get()
+            ->map(function ($invitation) {
+                return [
+                    'id' => 'invitation_' . $invitation->id,
+                    'name' => $invitation->name ?? '-',
+                    'email' => $invitation->email,
+                    'roles' => [$invitation->role],
+                    'status' => 'pending',
+                    'created_at' => $invitation->created_at,
+                    'updated_at' => $invitation->updated_at,
+                    'type' => 'invitation'
+                ];
+            });
+
+        // Συγχωνεύουμε τους χρήστες και τις προσκλήσεις
+        $users = $users->concat($pendingInvitations);
 
         // return inertia based on the role of the user
         if ($user->hasRole('owner')) {

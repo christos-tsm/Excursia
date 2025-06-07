@@ -72,8 +72,8 @@ export default function Create({ auth }: CreateInvitationProps) {
                                 value={data.role}
                                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setData('role', e.target.value)}
                             >
-                                <option value="guide">Οδηγός</option>
-                                <option value="staff">Προσωπικό</option>
+                                <option value="guide">Ξεναγός</option>
+                                <option value="staff">Γεν. Προσωπικό</option>
                             </SelectInput>
                             <InputError message={errors.role} className="mt-2" />
                         </div>

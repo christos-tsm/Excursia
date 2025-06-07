@@ -1,6 +1,6 @@
 import React from 'react';
 import { Head, Link } from '@inertiajs/react';
-import { Tenant, User } from '@/types/models';
+import { Role, Tenant } from '@/types/models';
 import { getCurrentTenantDomain } from '@/Utils/tenant';
 import {
     MapPin,
@@ -15,10 +15,21 @@ import {
 } from 'lucide-react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
+interface UserWithStatus {
+    id: string | number;
+    name: string;
+    email: string;
+    roles: string[];
+    status: 'accepted' | 'pending';
+    created_at: string;
+    updated_at: string;
+    type: 'user' | 'invitation';
+}
+
 interface OwnerDashboardProps {
     tenant: Tenant;
     userName: string;
-    users: User[];
+    users: UserWithStatus[];
 }
 
 export default function OwnerDashboard({ tenant, userName, users }: OwnerDashboardProps) {
@@ -81,6 +92,8 @@ export default function OwnerDashboard({ tenant, userName, users }: OwnerDashboa
         }
     ];
 
+    console.log(users);
+
     return (
         <AuthenticatedLayout>
             <Head title={`Dashboard - ${tenant.name}`} />
@@ -111,7 +124,7 @@ export default function OwnerDashboard({ tenant, userName, users }: OwnerDashboa
                     {/* Quick Stats */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div className="bg-white p-4 rounded-lg shadow border border-gray-200">
-                            <div className="flex items-center justify-between">
+                            <div className="flex justify-between">
                                 <div>
                                     <p className="text-sm text-gray-600">Ενεργά Ταξίδια</p>
                                     <p className="text-2xl font-bold text-gray-900">0</p>
@@ -120,16 +133,42 @@ export default function OwnerDashboard({ tenant, userName, users }: OwnerDashboa
                             </div>
                         </div>
                         <div className="bg-white p-4 rounded-lg shadow border border-gray-200">
-                            <div className="flex items-center justify-between">
+                            <div className="flex justify-between">
                                 <div>
-                                    <p className="text-sm text-gray-600">Αριθμός Προσωπικού</p>
-                                    <p className="text-2xl font-bold text-gray-900">{users?.length}</p>
+                                    <p className="text-sm text-gray-600">Προσωπικό</p>
+                                    <ul className="flex flex-col gap-2 mt-2">
+                                        {users.map(user =>
+                                            <li key={user.id} className="text-sm">
+                                                <Link href={`/tenant/${domain}/users/${user.id}`} className="flex items-center gap-1">
+                                                    {user.name}
+                                                    {!user.roles.includes('owner') && (
+                                                        <span className={`px-2 py-1 text-xs rounded-full ${user.status === 'accepted'
+                                                            ? 'bg-green-100 text-green-800'
+                                                            : 'bg-yellow-100 text-yellow-800'
+                                                            }`}>
+                                                            {user.status === 'accepted' ? 'Ενεργός' : 'Σε αναμονή'}
+                                                        </span>
+                                                    )}
+                                                    <span className="text-gray-600">
+                                                        ({user.roles.map(role => {
+                                                            switch (role) {
+                                                                case 'guide': return 'Ξεναγός';
+                                                                case 'staff': return 'Γεν. Υπάλληλος';
+                                                                case 'owner': return 'Ιδιοκτήτης';
+                                                                default: return role;
+                                                            }
+                                                        }).join(', ')})
+                                                    </span>
+                                                </Link>
+                                            </li>
+                                        )}
+                                    </ul>
                                 </div>
                                 <Users className="text-green-600" size={24} />
                             </div>
                         </div>
                         <div className="bg-white p-4 rounded-lg shadow border border-gray-200">
-                            <div className="flex items-center justify-between">
+                            <div className="flex justify-between">
                                 <div>
                                     <p className="text-sm text-gray-600">Μηνιαίες Κρατήσεις</p>
                                     <p className="text-2xl font-bold text-gray-900">0</p>
@@ -138,7 +177,7 @@ export default function OwnerDashboard({ tenant, userName, users }: OwnerDashboa
                             </div>
                         </div>
                         <div className="bg-white p-4 rounded-lg shadow border border-gray-200">
-                            <div className="flex items-center justify-between">
+                            <div className="flex justify-between">
                                 <div>
                                     <p className="text-sm text-gray-600">Έσοδα Μήνα</p>
                                     <p className="text-2xl font-bold text-gray-900">€0</p>

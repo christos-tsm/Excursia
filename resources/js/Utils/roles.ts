@@ -1,4 +1,4 @@
-import { User } from '@/types';
+import { User } from '@/types/models';
 
 /**
  * Επιστρέφει τους ρόλους ενός χρήστη ως array από strings
