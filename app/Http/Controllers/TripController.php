@@ -71,20 +71,17 @@ class TripController extends Controller {
                 'destination' => ['required', 'string', 'max:255'],
                 'price' => ['required', 'numeric', 'min:0'],
                 'duration' => ['required', 'integer', 'min:1'],
-                'departure_date' => ['nullable', 'date'],
-                'return_date' => ['nullable', 'date', 'after_or_equal:departure_date'],
+                'departure_date' => ['required', 'date'],
+                'return_date' => ['required', 'date', 'after_or_equal:departure_date'],
                 'is_published' => ['boolean'],
             ]);
 
             // Προσθήκη του tenant_id
             $validated['tenant_id'] = $tenant_id;
 
-            $trip = Trip::create($validated);
-
-            return redirect()->route('tenant.trips.show', [
-                'tenant_id' => $tenant_id,
-                'trip' => $trip->id
-            ])->with('message', 'Το ταξίδι δημιουργήθηκε επιτυχώς');
+            return redirect()->route('tenant.trips.index', [
+                'tenant_id' => $tenant_id
+            ]);
         } catch (\Exception $e) {
             return back()
                 ->with('error', 'Προέκυψε σφάλμα: ' . $e->getMessage())
@@ -133,8 +130,8 @@ class TripController extends Controller {
                 'destination' => ['required', 'string', 'max:255'],
                 'price' => ['required', 'numeric', 'min:0'],
                 'duration' => ['required', 'integer', 'min:1'],
-                'departure_date' => ['nullable', 'date'],
-                'return_date' => ['nullable', 'date', 'after_or_equal:departure_date'],
+                'departure_date' => ['required', 'date'],
+                'return_date' => ['required', 'date', 'after_or_equal:departure_date'],
                 'is_published' => ['boolean'],
             ]);
 
@@ -142,7 +139,7 @@ class TripController extends Controller {
 
             return redirect()->route('tenant.trips.show', [
                 'tenant_id' => $tenant_id,
-                'trip' => $trip->id
+                'trip' => $trip
             ])->with('message', 'Το ταξίδι ενημερώθηκε επιτυχώς');
         } catch (\Exception $e) {
             return back()

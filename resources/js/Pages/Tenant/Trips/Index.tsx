@@ -1,9 +1,12 @@
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { PageProps } from '@/types';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useState, useEffect } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import { Edit, Plus, Search, Trash2 } from 'lucide-react';
+import SelectInput from '@/Components/SelectInput';
+import TextInput from '@/Components/TextInput';
+import PrimaryButton from '@/Components/PrimaryButton';
 
 interface Trip {
     id: number;
@@ -22,6 +25,7 @@ interface Props extends PageProps {
         links: any[];
         total: number;
     };
+    tenant_id: number;
     filters: {
         search: string;
         status: string;
@@ -30,17 +34,23 @@ interface Props extends PageProps {
     error?: string;
 }
 
-export default function Index({ auth, trips, filters, success, error }: Props) {
+export default function Index({ auth, trips, tenant_id, filters, success, error }: Props) {
     const [searchTerm, setSearchTerm] = useState(filters.search);
     const [statusFilter, setStatusFilter] = useState(filters.status);
 
     // Εμφάνιση μηνυμάτων επιτυχίας ή σφάλματος
-    if (success) toast.success(success);
-    if (error) toast.error(error);
+    useEffect(() => {
+        if (success) {
+            toast.success(success);
+        }
+        if (error) {
+            toast.error(error);
+        }
+    }, [success, error]);
 
     const handleSearch = (e: FormEvent) => {
         e.preventDefault();
-        router.get(route('tenant.trips.index'), {
+        router.get(route('tenant.trips.index', { tenant_id }), {
             search: searchTerm,
             status: statusFilter,
         }, {
@@ -66,10 +76,10 @@ export default function Index({ auth, trips, filters, success, error }: Props) {
         <AuthenticatedLayout>
             <Head title="Διαχείριση Ταξιδιών" />
 
-            <div className="py-12 px-8">
+            <div className="py-4 px-8">
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-semibold text-gray-900">Ταξίδια</h1>
-                    <Link href={route('tenant.trips.create')} className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded flex items-center">
+                    <Link href={route('tenant.trips.create', { tenant_id })} className="bg-primary-400 text-sm hover:bg-primary-500 text-white py-2 px-4 rounded flex items-center">
                         <Plus className="w-4 h-4 mr-2" />
                         Προσθήκη
                     </Link>
@@ -82,7 +92,7 @@ export default function Index({ auth, trips, filters, success, error }: Props) {
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <Search className="h-5 w-5 text-gray-400" />
                             </div>
-                            <input
+                            <TextInput
                                 type="text"
                                 placeholder="Αναζήτηση..."
                                 className="pl-10 pr-4 py-2 w-full border rounded focus:ring-blue-500 focus:border-blue-500"
@@ -90,7 +100,7 @@ export default function Index({ auth, trips, filters, success, error }: Props) {
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
-                        <select
+                        <SelectInput
                             className="border rounded px-4 py-2 bg-white focus:ring-blue-500 focus:border-blue-500"
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
@@ -98,13 +108,13 @@ export default function Index({ auth, trips, filters, success, error }: Props) {
                             <option value="">Όλα</option>
                             <option value="published">Δημοσιευμένα</option>
                             <option value="draft">Πρόχειρα</option>
-                        </select>
-                        <button
+                        </SelectInput>
+                        <PrimaryButton
                             type="submit"
                             className="bg-gray-100 hover:bg-gray-200 py-2 px-4 rounded"
                         >
                             Φιλτράρισμα
-                        </button>
+                        </PrimaryButton>
                     </form>
                 </div>
 
@@ -132,34 +142,34 @@ export default function Index({ auth, trips, filters, success, error }: Props) {
                             ) : (
                                 trips.data.map((trip) => (
                                     <tr key={trip.id}>
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm">
                                             <Link
-                                                href={route('tenant.trips.show', trip.id)}
-                                                className="text-blue-600 hover:underline"
+                                                href={route('tenant.trips.show', { tenant_id, trip: trip.id })}
+                                                className="text-primary-500 font-medium hover:underline"
                                             >
                                                 {trip.title}
                                             </Link>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">{trip.destination}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap">{formatPrice(trip.price)}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap">{trip.duration} ημέρες</td>
-                                        <td className="px-6 py-4 whitespace-nowrap">{formatDate(trip.departure_date)}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm">{trip.destination}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm">{formatPrice(trip.price)}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm">{trip.duration} ημέρες</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm">{formatDate(trip.departure_date)}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm">
                                             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${trip.is_published ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
                                                 {trip.is_published ? 'Δημοσιευμένο' : 'Πρόχειρο'}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-sm font-medium space-x-2">
                                             <Link
-                                                href={route('tenant.trips.edit', trip.id)}
-                                                className="text-indigo-600 hover:text-indigo-900 inline-flex items-center"
+                                                href={route('tenant.trips.edit', { tenant_id, trip: trip.id })}
+                                                className="text-primary-400 hover:text-primary-500 inline-flex items-center"
                                             >
                                                 <Edit className="w-4 h-4 mr-1" />
                                             </Link>
                                             <button
                                                 onClick={() => {
                                                     if (confirm('Είστε βέβαιοι ότι θέλετε να διαγράψετε αυτό το ταξίδι;')) {
-                                                        router.delete(route('tenant.trips.destroy', trip.id));
+                                                        router.delete(route('tenant.trips.destroy', { tenant_id, trip: trip.id }));
                                                     }
                                                 }}
                                                 className="text-red-600 hover:text-red-900 inline-flex items-center"
