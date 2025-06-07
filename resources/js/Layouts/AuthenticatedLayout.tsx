@@ -6,7 +6,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { PropsWithChildren, ReactNode, useState, useEffect } from 'react';
 import { User } from '@/types';
 import { PageProps } from '@/types';
-import { CalendarCheck2, LayoutDashboard, Map, Users, Mail, Eye, BarChart3, Settings, CheckCircle, MessageCircle } from 'lucide-react';
+import { CalendarCheck2, LayoutDashboard, Map, Users, Mail, Eye, BarChart3, Settings, CheckCircle, MessageCircle, FileText } from 'lucide-react';
 import { getCurrentTenantDomain } from '@/Utils/tenant';
 
 export default function Authenticated({ header, children }: PropsWithChildren<{ header?: ReactNode }>) {
@@ -56,6 +56,12 @@ export default function Authenticated({ header, children }: PropsWithChildren<{ 
                     path: 'trips',
                     icon: Map,
                     current: isCurrentRoute('/trips'),
+                },
+                {
+                    name: 'Έγγραφα',
+                    path: 'documents',
+                    icon: FileText,
+                    current: isCurrentRoute('/documents'),
                 },
                 {
                     name: 'Προσκλήσεις',

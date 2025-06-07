@@ -92,11 +92,30 @@ class TripController extends Controller {
     /**
      * Εμφάνιση λεπτομερειών ταξιδιού
      */
-    public function show(Request $request, Trip $trip) {
-        $tenant_id = $request->route('tenant_id');
+    public function show(Request $request, $tenant_id, Trip $trip) {
+
+        // Λήψη των πρόσφατων εγγράφων του ταξιδιού
+        $recentDocuments = $trip->documents()
+            ->with('uploadedBy:id,name')
+            ->latest()
+            ->take(5)
+            ->get()
+            ->map(function ($document) {
+                return [
+                    'id' => $document->id,
+                    'title' => $document->title,
+                    'file_type' => $document->file_type,
+                    'file_icon' => $document->file_icon,
+                    'document_type_label' => $document->document_type_label,
+                    'created_at' => $document->created_at->format('d/m/Y H:i'),
+                    'download_url' => $document->download_url,
+                ];
+            });
 
         return Inertia::render('Tenant/Trips/Show', [
-            'trip' => $trip,
+            'trip' => $trip->load('tenant:id,name'),
+            'recentDocuments' => $recentDocuments,
+            'documentsCount' => $trip->documents()->count(),
             'tenant_id' => $tenant_id,
             'success' => session('message'),
             'error' => session('error')
@@ -106,8 +125,7 @@ class TripController extends Controller {
     /**
      * Εμφάνιση φόρμας επεξεργασίας ταξιδιού
      */
-    public function edit(Request $request, Trip $trip) {
-        $tenant_id = $request->route('tenant_id');
+    public function edit(Request $request, $tenant_id, Trip $trip) {
 
         return Inertia::render('Tenant/Trips/Edit', [
             'trip' => $trip,
@@ -120,9 +138,8 @@ class TripController extends Controller {
     /**
      * Ενημέρωση ταξιδιού
      */
-    public function update(Request $request, Trip $trip) {
+    public function update(Request $request, $tenant_id, Trip $trip) {
         try {
-            $tenant_id = $request->route('tenant_id');
 
             $validated = $request->validate([
                 'title' => ['required', 'string', 'max:255'],
@@ -151,9 +168,8 @@ class TripController extends Controller {
     /**
      * Διαγραφή ταξιδιού
      */
-    public function destroy(Request $request, Trip $trip) {
+    public function destroy(Request $request, $tenant_id, Trip $trip) {
         try {
-            $tenant_id = $request->route('tenant_id');
 
             $trip->delete();
 
@@ -168,8 +184,7 @@ class TripController extends Controller {
     /**
      * Δημοσίευση/απόσυρση ταξιδιού
      */
-    public function togglePublish(Request $request, Trip $trip) {
-        $tenant_id = $request->route('tenant_id');
+    public function togglePublish(Request $request, $tenant_id, Trip $trip) {
 
         $trip->is_published = !$trip->is_published;
         $trip->save();

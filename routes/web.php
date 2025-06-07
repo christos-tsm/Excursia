@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TenantController;
 use App\Http\Controllers\TenantRegisterController;
 use App\Http\Controllers\TripController;
+use App\Http\Controllers\TripDocumentController;
 use App\Http\Controllers\InvitationController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -146,6 +147,19 @@ Route::prefix('tenant/{tenant_id}')->middleware(['web', 'auth', 'tenant.access']
         Route::put('/trips/{trip}', [TripController::class, 'update'])->middleware('tenant.resource')->name('trips.update');
         Route::delete('/trips/{trip}', [TripController::class, 'destroy'])->middleware('tenant.resource')->name('trips.destroy');
         Route::post('/trips/{trip}/toggle-publish', [TripController::class, 'togglePublish'])->middleware('tenant.resource')->name('trips.toggle-publish');
+
+        // All Documents (across all trips)
+        Route::get('/documents', [TripDocumentController::class, 'allDocuments'])->name('documents.index');
+
+        // Trip Documents
+        Route::get('/trips/{trip}/documents', [TripDocumentController::class, 'index'])->middleware('tenant.resource')->name('trip.documents.index');
+        Route::get('/trips/{trip}/documents/create', [TripDocumentController::class, 'create'])->middleware('tenant.resource')->name('trip.documents.create');
+        Route::get('/trips/{trip}/documents/create-editor', [TripDocumentController::class, 'createEditor'])->middleware('tenant.resource')->name('trip.documents.create-editor');
+        Route::post('/trips/{trip}/documents', [TripDocumentController::class, 'store'])->middleware('tenant.resource')->name('trip.documents.store');
+        Route::post('/trips/{trip}/documents/store-editor', [TripDocumentController::class, 'storeEditor'])->middleware('tenant.resource')->name('trip.documents.store-editor');
+        Route::get('/trips/{trip}/documents/{document}/export/{format}', [TripDocumentController::class, 'export'])->middleware('tenant.resource')->name('trip.documents.export');
+        Route::get('/trips/{trip}/documents/{document}/download', [TripDocumentController::class, 'download'])->middleware('tenant.resource')->name('trip.documents.download');
+        Route::delete('/trips/{trip}/documents/{document}', [TripDocumentController::class, 'destroy'])->middleware('tenant.resource')->name('trip.documents.destroy');
 
         // Invitations
         Route::get('/invitations', [InvitationController::class, 'index'])->name('invitations.index');

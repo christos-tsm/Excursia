@@ -3,7 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { PageProps } from '@/types';
 import { FormEvent, useState, useEffect } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
-import { Edit, Plus, Search, Trash2 } from 'lucide-react';
+import { Edit, Plus, Search, Trash2, FileText } from 'lucide-react';
 import SelectInput from '@/Components/SelectInput';
 import TextInput from '@/Components/TextInput';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -159,12 +159,20 @@ export default function Index({ auth, trips, tenant_id, filters, success, error 
                                                 {trip.is_published ? 'Δημοσιευμένο' : 'Πρόχειρο'}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-sm font-medium space-x-2">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium space-x-2">
+                                            <Link
+                                                href={route('tenant.trip.documents.index', { tenant_id, trip: trip.id })}
+                                                className="text-blue-600 hover:text-blue-700 inline-flex items-center"
+                                                title="Έγγραφα"
+                                            >
+                                                <FileText className="w-4 h-4" />
+                                            </Link>
                                             <Link
                                                 href={route('tenant.trips.edit', { tenant_id, trip: trip.id })}
                                                 className="text-primary-400 hover:text-primary-500 inline-flex items-center"
+                                                title="Επεξεργασία"
                                             >
-                                                <Edit className="w-4 h-4 mr-1" />
+                                                <Edit className="w-4 h-4" />
                                             </Link>
                                             <button
                                                 onClick={() => {
@@ -173,8 +181,9 @@ export default function Index({ auth, trips, tenant_id, filters, success, error 
                                                     }
                                                 }}
                                                 className="text-red-600 hover:text-red-900 inline-flex items-center"
+                                                title="Διαγραφή"
                                             >
-                                                <Trash2 className="w-4 h-4 mr-1" />
+                                                <Trash2 className="w-4 h-4" />
                                             </button>
                                         </td>
                                     </tr>
